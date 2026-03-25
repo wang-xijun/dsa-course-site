@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>循环队列交互式讲解</title>
+  <style>
+    :root {
+      --bg: #09111d;
+      --panel: rgba(13, 24, 42, 0.9);
+      --panel-strong: rgba(18, 31, 53, 0.96);
+      --line: rgba(157, 182, 255, 0.18);
+      --text: #edf3ff;
+      --muted: #9fb0d4;
+      --accent: #f4d27a;
+      --blue: #84b8ff;
+      --green: #82dfb0;
+      --rose: #ffb3a7;
+      --shadow: 0 28px 60px rgba(1, 8, 22, 0.45);
+      --radius: 24px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+      --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(82, 123, 220, 0.20), transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(243, 210, 122, 0.14), transparent 24%),
+        linear-gradient(180deg, #060c16 0%, #09111d 55%, #0c1522 100%);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    h1,
+    h2,
+    p,
+    button,
+    input,
+    label,
+    select,
+    span,
+    div {
+      letter-spacing: 0;
+      font-kerning: normal;
+    }
+
+    .app {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 18px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(9, 17, 29, 0.95), rgba(10, 19, 31, 0.89));
+      box-shadow: var(--shadow);
+    }
+
+    .hero,
+    .controls,
+    .status-strip,
+    .panel {
+      border-radius: var(--radius);
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    .hero {
+      margin-bottom: 14px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      bottom: -90px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(132, 184, 255, 0.22), transparent 66%);
+      pointer-events: none;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.06;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 16px 18px;
+    }
+
+    .field-row,
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    input,
+    select,
+    button {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    input,
+    select {
+      padding: 11px 12px;
+      font-family: var(--mono);
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(244, 210, 122, 0.42);
+      box-shadow: 0 0 0 3px rgba(244, 210, 122, 0.18);
+    }
+
+    #value-input {
+      width: 120px;
+    }
+
+    #capacity-select {
+      width: 92px;
+    }
+
+    button {
+      appearance: none;
+      padding: 11px 14px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(244, 210, 122, 0.24), rgba(183, 128, 39, 0.18));
+      border-color: rgba(244, 210, 122, 0.34);
+      color: #fff2cb;
+    }
+
+    button.secondary {
+      background: linear-gradient(180deg, rgba(132, 184, 255, 0.20), rgba(88, 126, 184, 0.16));
+      border-color: rgba(132, 184, 255, 0.30);
+      color: #e6f0ff;
+    }
+
+    button.danger {
+      background: linear-gradient(180deg, rgba(255, 179, 167, 0.18), rgba(160, 82, 74, 0.16));
+      border-color: rgba(255, 179, 167, 0.28);
+      color: #ffe5e0;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px;
+    }
+
+    .status-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .status-label {
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .status-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .status-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .panel {
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.1;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .viz-shell {
+      min-height: 470px;
+      padding: 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background:
+        radial-gradient(circle at 16% 18%, rgba(132, 184, 255, 0.08), transparent 20%),
+        radial-gradient(circle at 84% 82%, rgba(130, 223, 176, 0.08), transparent 20%),
+        linear-gradient(180deg, rgba(17, 30, 52, 0.98), rgba(13, 23, 40, 0.98));
+    }
+
+    .viz-caption {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .viz-caption strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .storage-zone {
+      position: relative;
+      padding: 26px 18px 20px;
+      border-radius: 24px;
+      border: 1px solid rgba(132, 184, 255, 0.12);
+      background: rgba(8, 17, 31, 0.52);
+    }
+
+    .track {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(var(--slot-count, 6), minmax(110px, 1fr));
+      gap: 14px;
+      align-items: stretch;
+      padding-top: 56px;
+    }
+
+    .slot {
+      position: relative;
+      min-height: 174px;
+      padding: 14px 12px 12px;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(26, 42, 68, 0.92), rgba(16, 27, 46, 0.92));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .slot.occupied {
+      border-color: rgba(130, 223, 176, 0.34);
+      box-shadow: 0 14px 24px rgba(4, 10, 24, 0.28), inset 0 0 0 1px rgba(130, 223, 176, 0.10);
+    }
+
+    .slot.front-slot {
+      box-shadow: inset 0 0 0 1px rgba(244, 210, 122, 0.24), 0 0 0 1px rgba(244, 210, 122, 0.22);
+    }
+
+    .slot.rear-next-slot {
+      box-shadow: inset 0 0 0 1px rgba(132, 184, 255, 0.28), 0 0 0 1px rgba(132, 184, 255, 0.18);
+    }
+
+    .slot-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 46px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    .slot-value {
+      margin-top: 22px;
+      min-height: 68px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: #dce8ff;
+    }
+
+    .slot.occupied .slot-value {
+      background: linear-gradient(180deg, rgba(78, 120, 189, 0.98), rgba(49, 80, 135, 0.96));
+      border-style: solid;
+      border-color: rgba(132, 184, 255, 0.30);
+    }
+
+    .slot.empty .slot-value {
+      color: rgba(159, 176, 212, 0.52);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .slot-meta {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      min-height: 36px;
+    }
+
+    .pointer-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .pointer {
+      position: absolute;
+      top: 2px;
+      transform: translateX(-50%);
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: left 220ms ease;
+    }
+
+    .pointer-tag {
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 10px 24px rgba(2, 8, 24, 0.28);
+    }
+
+    .pointer.front .pointer-tag {
+      background: rgba(244, 210, 122, 0.18);
+      border: 1px solid rgba(244, 210, 122, 0.34);
+      color: #ffe5a4;
+    }
+
+    .pointer.rear .pointer-tag {
+      background: rgba(132, 184, 255, 0.18);
+      border: 1px solid rgba(132, 184, 255, 0.34);
+      color: #dce8ff;
+    }
+
+    .pointer-arrow {
+      width: 2px;
+      height: 26px;
+      background: currentColor;
+      opacity: 0.9;
+      position: relative;
+    }
+
+    .pointer-arrow::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -4px;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid currentColor;
+    }
+
+    .message-bar {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .status-ok {
+      color: var(--green);
+    }
+
+    .status-warn {
+      color: var(--accent);
+    }
+
+    @media (max-width: 1180px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .status-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      body {
+        padding: 10px;
+      }
+
+      .app {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .status-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .track {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .viz-shell {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <h1>循环队列交互式讲解</h1>
+      <p class="subtitle">
+        课堂上只看两件事：<strong>底层存储区</strong> 和 <strong>front / rear / size / 状态</strong>。
+        你可以点击入队、出队和“演示绕回”，直接观察数组前部空出来以后，Rear 如何通过取模回到开头继续使用。
+      </p>
+    </section>
+
+    <section class="controls">
+      <div class="field-row">
+        <div class="field">
+          <label for="capacity-select">逻辑容量</label>
+          <select id="capacity-select">
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="value-input">入队值</label>
+          <input id="value-input" type="text" maxlength="4" value="10">
+        </div>
+      </div>
+      <div class="button-row">
+        <button id="enqueue-btn" class="primary">入队 enqueue</button>
+        <button id="dequeue-btn" class="secondary">出队 dequeue</button>
+        <button id="demo-btn">演示绕回</button>
+        <button id="random-btn">随机值</button>
+        <button id="reset-btn" class="danger">重置</button>
+      </div>
+    </section>
+
+    <section class="status-strip">
+      <div class="status-card">
+        <div class="status-label">逻辑容量</div>
+        <div id="capacity-value" class="status-value">4</div>
+        <div class="status-note">真正能装的元素数</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">数组总槽位</div>
+        <div id="storage-value" class="status-value">5</div>
+        <div class="status-note">总是比逻辑容量多 1</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">front</div>
+        <div id="front-value" class="status-value">0</div>
+        <div class="status-note">下一次出队从这里拿</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">rear</div>
+        <div id="rear-value" class="status-value">0</div>
+        <div class="status-note">下一次入队写到这里</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">size</div>
+        <div id="size-value" class="status-value">0</div>
+        <div class="status-note">当前逻辑队列长度</div>
+      </div>
+      <div class="status-card">
+        <div class="status-label">状态</div>
+        <div id="status-value" class="status-value">空</div>
+        <div id="status-note" class="status-note">front == rear</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>数组存储区</h2>
+        <div class="panel-note">黄色是 Front，蓝色是 Rear；重点看谁在移动、什么时候绕回</div>
+      </div>
+      <div class="panel-body">
+        <div class="viz-shell">
+          <div class="viz-caption">
+            <span><strong>规则：</strong> `front` 指向当前队头，`rear` 指向下一个可写入位置</span>
+            <span><strong>提醒：</strong> 页面里总槽位数 = 逻辑容量 + 1</span>
+          </div>
+          <div class="storage-zone">
+            <div id="track" class="track"></div>
+            <div id="pointer-layer" class="pointer-layer"></div>
+          </div>
+          <div id="message-bar" class="message-bar"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const capacitySelect = document.getElementById("capacity-select");
+    const valueInput = document.getElementById("value-input");
+    const enqueueBtn = document.getElementById("enqueue-btn");
+    const dequeueBtn = document.getElementById("dequeue-btn");
+    const demoBtn = document.getElementById("demo-btn");
+    const randomBtn = document.getElementById("random-btn");
+    const resetBtn = document.getElementById("reset-btn");
+
+    const track = document.getElementById("track");
+    const pointerLayer = document.getElementById("pointer-layer");
+    const messageBar = document.getElementById("message-bar");
+
+    const capacityValue = document.getElementById("capacity-value");
+    const storageValue = document.getElementById("storage-value");
+    const frontValue = document.getElementById("front-value");
+    const rearValue = document.getElementById("rear-value");
+    const sizeValue = document.getElementById("size-value");
+    const statusValue = document.getElementById("status-value");
+    const statusNote = document.getElementById("status-note");
+
+    let queue = null;
+    let latestMessage = "";
+    let demoRunning = false;
+
+    class CircularQueue {
+      constructor(capacity) {
+        this.capacity = capacity;
+        this.data = new Array(capacity + 1).fill(null);
+        this.front = 0;
+        this.rear = 0;
+      }
+
+      isEmpty() {
+        return this.front === this.rear;
+      }
+
+      isFull() {
+        return (this.rear + 1) % this.data.length === this.front;
+      }
+
+      size() {
+        return (this.rear - this.front + this.data.length) % this.data.length;
+      }
+
+      enqueue(value) {
+        if (this.isFull()) {
+          throw new Error("queue is full");
+        }
+        const writeIndex = this.rear;
+        this.data[this.rear] = value;
+        this.rear = (this.rear + 1) % this.data.length;
+        return writeIndex;
+      }
+
+      dequeue() {
+        if (this.isEmpty()) {
+          throw new Error("queue is empty");
+        }
+        const readIndex = this.front;
+        const value = this.data[this.front];
+        this.data[this.front] = null;
+        this.front = (this.front + 1) % this.data.length;
+        return { value, readIndex };
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    function setMessage(text) {
+      latestMessage = text;
+      messageBar.textContent = latestMessage;
+    }
+
+    function getStatusInfo() {
+      if (queue.isEmpty()) {
+        return { label: "空", note: "front == rear", cls: "status-ok" };
+      }
+      if (queue.isFull()) {
+        return { label: "满", note: "(rear + 1) % n == front", cls: "status-warn" };
+      }
+      return { label: "可操作", note: "还能继续入队和出队", cls: "status-ok" };
+    }
+
+    function renderPointers(slotEls) {
+      pointerLayer.innerHTML = "";
+      if (!slotEls.length) {
+        return;
+      }
+
+      const containerRect = pointerLayer.getBoundingClientRect();
+      const frontRect = slotEls[queue.front].getBoundingClientRect();
+      const rearRect = slotEls[queue.rear].getBoundingClientRect();
+
+      const frontPointer = document.createElement("div");
+      frontPointer.className = "pointer front";
+      frontPointer.style.left = (frontRect.left - containerRect.left + frontRect.width / 2) + "px";
+      frontPointer.style.color = "#f4d27a";
+      frontPointer.innerHTML = '<div class="pointer-tag">Front</div><div class="pointer-arrow"></div>';
+
+      const rearPointer = document.createElement("div");
+      rearPointer.className = "pointer rear";
+      rearPointer.style.left = (rearRect.left - containerRect.left + rearRect.width / 2) + "px";
+      rearPointer.style.color = "#84b8ff";
+      rearPointer.innerHTML = '<div class="pointer-tag">Rear</div><div class="pointer-arrow"></div>';
+
+      pointerLayer.appendChild(frontPointer);
+      pointerLayer.appendChild(rearPointer);
+    }
+
+    function renderTrack() {
+      track.innerHTML = "";
+      track.style.setProperty("--slot-count", String(queue.data.length));
+      const slotEls = [];
+
+      queue.data.forEach((value, index) => {
+        const slot = document.createElement("div");
+        slot.className = "slot " + (value === null ? "empty" : "occupied");
+        if (index === queue.front) {
+          slot.classList.add("front-slot");
+        }
+        if (index === queue.rear) {
+          slot.classList.add("rear-next-slot");
+        }
+
+        let meta = "当前没有特殊角色";
+        if (!queue.isEmpty() && index === queue.front && index === queue.rear) {
+          meta = "此刻 front 和 rear 重合";
+        } else if (!queue.isEmpty() && index === queue.front) {
+          meta = "当前队头";
+        } else if (index === queue.rear) {
+          meta = "下一个入队位置";
+        }
+
+        slot.innerHTML = `
+          <div class="slot-index">index ${index}</div>
+          <div class="slot-value">${value === null ? "空槽" : value}</div>
+          <div class="slot-meta">${meta}</div>
+        `;
+        track.appendChild(slot);
+        slotEls.push(slot);
+      });
+
+      renderPointers(slotEls);
+    }
+
+    function renderState() {
+      capacityValue.textContent = String(queue.capacity);
+      storageValue.textContent = String(queue.data.length);
+      frontValue.textContent = String(queue.front);
+      rearValue.textContent = String(queue.rear);
+      sizeValue.textContent = String(queue.size());
+
+      const status = getStatusInfo();
+      statusValue.className = "status-value " + status.cls;
+      statusValue.textContent = status.label;
+      statusNote.textContent = status.note;
+
+      if (!latestMessage) {
+        setMessage("页面已准备好。建议先入队几个值，再出队两次，然后继续入队观察 Rear 是否绕回到 0。");
+      }
+    }
+
+    function renderAll() {
+      renderTrack();
+      renderState();
+      enqueueBtn.disabled = queue.isFull() || demoRunning;
+      dequeueBtn.disabled = queue.isEmpty() || demoRunning;
+      demoBtn.disabled = demoRunning;
+      randomBtn.disabled = demoRunning;
+      resetBtn.disabled = demoRunning;
+      capacitySelect.disabled = demoRunning;
+      valueInput.disabled = demoRunning;
+      messageBar.textContent = latestMessage;
+    }
+
+    function resetQueue(message = null) {
+      queue = new CircularQueue(Number(capacitySelect.value));
+      latestMessage = message || ("已重置。逻辑容量是 " + queue.capacity + "，数组总槽位是 " + queue.data.length + "。");
+      renderAll();
+    }
+
+    function nextSuggestedValue() {
+      const used = queue.data
+        .map((item) => Number(item))
+        .filter((num) => Number.isFinite(num));
+      const max = used.length ? Math.max(...used) : 0;
+      return String(max + 10);
+    }
+
+    function handleEnqueue() {
+      const value = valueInput.value.trim() || nextSuggestedValue();
+      try {
+        const writeIndex = queue.enqueue(value);
+        const wrapText = queue.rear === 0 ? " 注意：Rear 已经通过取模绕回到 0。" : "";
+        setMessage("已把 " + value + " 写入 index " + writeIndex + "，随后 rear 移动到 " + queue.rear + "。" + wrapText);
+        valueInput.value = nextSuggestedValue();
+      } catch (error) {
+        setMessage("无法入队：队列已满。因为再前进一步，Rear 就会撞到 Front。");
+      }
+      renderAll();
+    }
+
+    function handleDequeue() {
+      try {
+        const result = queue.dequeue();
+        const wrapText = queue.front === 0 ? " 注意：Front 已经通过取模绕回到 0。" : "";
+        setMessage(result.value + " 已从 index " + result.readIndex + " 出队，随后 front 移动到 " + queue.front + "。" + wrapText);
+      } catch (error) {
+        setMessage("无法出队：队列为空，此时 front == rear。");
+      }
+      renderAll();
+    }
+
+    function setRandomValue() {
+      valueInput.value = String(Math.floor(Math.random() * 90 + 10));
+      setMessage("已生成一个随机值。现在可以直接点击入队。");
+      renderAll();
+    }
+
+    async function runDemo() {
+      if (demoRunning) {
+        return;
+      }
+      demoRunning = true;
+      capacitySelect.value = "4";
+      resetQueue("开始演示：目标是让你看到 Rear 在数组末尾之后绕回到开头。");
+      renderAll();
+
+      const steps = [
+        () => { valueInput.value = "10"; handleEnqueue(); },
+        () => { valueInput.value = "20"; handleEnqueue(); },
+        () => { valueInput.value = "30"; handleEnqueue(); },
+        () => { handleDequeue(); },
+        () => { handleDequeue(); },
+        () => { valueInput.value = "40"; handleEnqueue(); },
+        () => { valueInput.value = "50"; handleEnqueue(); },
+        () => { valueInput.value = "60"; handleEnqueue(); }
+      ];
+
+      for (const step of steps) {
+        step();
+        await sleep(760);
+      }
+
+      setMessage("演示结束。现在请看存储区：前面空出来的位置已经被 Rear 绕回后重新利用了。");
+      demoRunning = false;
+      renderAll();
+    }
+
+    enqueueBtn.addEventListener("click", handleEnqueue);
+    dequeueBtn.addEventListener("click", handleDequeue);
+    demoBtn.addEventListener("click", runDemo);
+    randomBtn.addEventListener("click", setRandomValue);
+    resetBtn.addEventListener("click", () => {
+      demoRunning = false;
+      resetQueue();
+    });
+    capacitySelect.addEventListener("change", () => resetQueue());
+    valueInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        handleEnqueue();
+      }
+    });
+    window.addEventListener("resize", renderAll);
+
+    resetQueue("页面已准备好。建议先入队几个值，再出队两次，然后继续入队观察 Rear 是否绕回到 0。");
+    valueInput.value = "10";
+    renderAll();
+  </script>
+</body>
+</html>

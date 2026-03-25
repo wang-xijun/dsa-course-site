@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recursive Binary Search</title>
+  <style>
+    :root {
+      --bg: #071121;
+      --panel: rgba(10, 20, 40, 0.88);
+      --panel-strong: rgba(15, 29, 57, 0.96);
+      --line: rgba(160, 176, 220, 0.18);
+      --text: #ecf1ff;
+      --muted: #a8b4d4;
+      --accent: #f3d78a;
+      --blue: #8ab5ff;
+      --green: #88deb0;
+      --red: #f6a4a0;
+      --rose: #ffb6b0;
+      --shadow: 0 22px 48px rgba(2, 8, 24, 0.42);
+      --radius: 22px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+      --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(96, 126, 214, 0.18), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(54, 175, 132, 0.12), transparent 28%),
+        linear-gradient(180deg, #060d1a 0%, #071121 58%, #091529 100%);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 16px;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(7, 17, 33, 0.94), rgba(7, 17, 33, 0.86));
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 14px;
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    .title {
+      margin-right: auto;
+      min-width: 260px;
+    }
+
+    .title h1 {
+      margin: 0 0 4px;
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .field,
+    .buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    label,
+    button,
+    input,
+    p,
+    span,
+    h1,
+    h2,
+    div {
+      letter-spacing: 0;
+      font-kerning: normal;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    input {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 15px;
+      font-family: var(--mono);
+      outline: none;
+    }
+
+    #array-input {
+      width: 230px;
+    }
+
+    #target-input {
+      width: 84px;
+    }
+
+    input:focus {
+      border-color: rgba(243, 215, 138, 0.40);
+      box-shadow: 0 0 0 3px rgba(243, 215, 138, 0.18);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 13px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(243, 215, 138, 0.24), rgba(183, 129, 32, 0.18));
+      border-color: rgba(243, 215, 138, 0.34);
+      color: #fff1ca;
+    }
+
+    button.active {
+      background: rgba(138, 181, 255, 0.18);
+      border-color: rgba(138, 181, 255, 0.40);
+      color: #dce8ff;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1.2fr) 420px;
+      gap: 14px;
+      min-height: 760px;
+    }
+
+    .panel {
+      min-width: 0;
+      border-radius: var(--radius);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .code-wrap,
+    .viz-wrap,
+    .tree-wrap {
+      padding: 16px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(138, 181, 255, 0.18);
+      color: #edf1ff;
+      font-family: var(--mono);
+      font-size: 21px;
+      line-height: 1.6;
+      overflow: auto;
+    }
+
+    .code-line {
+      display: block;
+      width: 100%;
+      margin-left: -6px;
+      padding: 0 6px;
+      border-radius: 10px;
+    }
+
+    .code-line.active {
+      background: rgba(243, 215, 138, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(243, 215, 138, 0.16);
+    }
+
+    .line-no {
+      display: inline-block;
+      width: 28px;
+      margin-right: 16px;
+      color: #6f7ea7;
+      user-select: none;
+    }
+
+    .kw {
+      color: var(--blue);
+    }
+
+    .fn {
+      color: var(--accent);
+    }
+
+    .num {
+      color: var(--green);
+    }
+
+    .status-box,
+    .summary-box {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .status-box strong,
+    .summary-box strong {
+      color: var(--text);
+    }
+
+    .status-box {
+      margin-bottom: 14px;
+      min-height: 68px;
+    }
+
+    .array-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .arr-label {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .cells {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .cell-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 54px;
+    }
+
+    .index {
+      color: #7c89b1;
+      font-size: 13px;
+      font-family: var(--mono);
+    }
+
+    .cell {
+      width: 54px;
+      height: 58px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 22px;
+      background: linear-gradient(180deg, rgba(77, 112, 176, 0.95), rgba(50, 78, 136, 0.95));
+      border: 1px solid rgba(217, 226, 255, 0.40);
+      transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .cell.outside {
+      opacity: 0.26;
+      transform: scale(0.94);
+    }
+
+    .cell.in-range {
+      box-shadow: 0 0 0 2px rgba(136, 222, 176, 0.22);
+    }
+
+    .cell.mid {
+      background: linear-gradient(180deg, rgba(166, 119, 30, 0.98), rgba(127, 88, 19, 0.98));
+      border-color: rgba(243, 215, 138, 0.86);
+      box-shadow: 0 0 0 3px rgba(243, 215, 138, 0.20);
+    }
+
+    .cell.target {
+      background: linear-gradient(180deg, rgba(49, 130, 86, 0.98), rgba(31, 88, 58, 0.98));
+      border-color: rgba(136, 222, 176, 0.86);
+    }
+
+    .markers {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .marker {
+      padding: 11px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .marker strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tree-svg {
+      width: 100%;
+      height: 620px;
+      display: block;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(14, 25, 48, 0.92), rgba(11, 20, 39, 0.98));
+      border: 1px solid rgba(138, 181, 255, 0.12);
+    }
+
+    .tree-node {
+      fill: rgba(43, 61, 103, 0.96);
+      stroke: rgba(212, 223, 255, 0.32);
+      stroke-width: 1.5;
+    }
+
+    .tree-node.current {
+      fill: rgba(132, 95, 24, 0.96);
+      stroke: rgba(243, 215, 138, 0.90);
+      stroke-width: 2.2;
+    }
+
+    .tree-node.done {
+      fill: rgba(34, 93, 65, 0.96);
+      stroke: rgba(136, 222, 176, 0.66);
+    }
+
+    .tree-node.miss {
+      fill: rgba(108, 55, 55, 0.96);
+      stroke: rgba(246, 164, 160, 0.66);
+    }
+
+    .tree-text {
+      fill: #eef3ff;
+      font-size: 18px;
+      font-family: var(--mono);
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .tree-note {
+      fill: #9eaad0;
+      font-size: 13px;
+      font-family: var(--sans);
+      text-anchor: middle;
+    }
+
+    .tree-edge {
+      stroke: rgba(162, 178, 219, 0.58);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    @media (max-width: 1320px) {
+      .layout {
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+
+      .tree-svg {
+        height: 520px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>递归二分查找</h1>
+        <p>同步看代码、数组范围缩小动画，以及递归调用树为什么只有 O(log n) 层。</p>
+      </div>
+      <div class="field">
+        <label for="array-input">有序数组</label>
+        <input id="array-input" type="text" value="1,3,5,7,9,11,13,15">
+      </div>
+      <div class="field">
+        <label for="target-input">target</label>
+        <input id="target-input" type="number" value="13">
+      </div>
+      <div class="buttons">
+        <button id="build-btn" class="primary">生成过程</button>
+        <button id="prev-btn">上一步</button>
+        <button id="next-btn">下一步</button>
+        <button id="auto-btn">自动播放</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Python 代码</h2>
+          <div class="panel-note">高亮当前这一步真正执行到的判断分支</div>
+        </div>
+        <div class="code-wrap">
+          <pre id="code-block"><span class="code-line" data-line="1"><span class="line-no">1</span><span><span class="kw">def</span> <span class="fn">binary_search_recursive</span>(arr, left, right, target):</span></span>
+<span class="code-line" data-line="2"><span class="line-no">2</span><span>    <span class="kw">if</span> left &gt; right:</span></span>
+<span class="code-line" data-line="3"><span class="line-no">3</span><span>        <span class="kw">return</span> -<span class="num">1</span></span></span>
+<span class="code-line" data-line="4"><span class="line-no">4</span><span>    mid = (left + right) // <span class="num">2</span></span></span>
+<span class="code-line" data-line="5"><span class="line-no">5</span><span>    <span class="kw">if</span> arr[mid] == target:</span></span>
+<span class="code-line" data-line="6"><span class="line-no">6</span><span>        <span class="kw">return</span> mid</span></span>
+<span class="code-line" data-line="7"><span class="line-no">7</span><span>    <span class="kw">if</span> arr[mid] &lt; target:</span></span>
+<span class="code-line" data-line="8"><span class="line-no">8</span><span>        <span class="kw">return</span> binary_search_recursive(arr, mid + <span class="num">1</span>, right, target)</span></span>
+<span class="code-line" data-line="9"><span class="line-no">9</span><span>    <span class="kw">return</span> binary_search_recursive(arr, left, mid - <span class="num">1</span>, target)</span></span></pre>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>数组范围变化</h2>
+          <div class="panel-note" id="step-note">准备展示搜索过程</div>
+        </div>
+        <div class="viz-wrap">
+          <div class="status-box" id="status-box">点击“生成过程”，观察搜索区间如何不断减半。</div>
+          <div class="array-row">
+            <div class="arr-label">arr</div>
+            <div class="cells" id="cells"></div>
+          </div>
+          <div class="markers">
+            <div class="marker"><strong>left</strong><span id="left-marker">-</span></div>
+            <div class="marker"><strong>mid</strong><span id="mid-marker">-</span></div>
+            <div class="marker"><strong>right</strong><span id="right-marker">-</span></div>
+          </div>
+          <div class="summary-box" id="summary-box">每次递归调用都只保留一半区间。</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>递归调用树</h2>
+          <div class="panel-note">实际上只沿一条分支继续向下调用</div>
+        </div>
+        <div class="tree-wrap">
+          <svg class="tree-svg" id="tree-svg" viewBox="0 0 400 620" preserveAspectRatio="xMidYMid meet" aria-label="binary search recursion tree"></svg>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const arrayInput = document.getElementById("array-input");
+    const targetInput = document.getElementById("target-input");
+    const buildBtn = document.getElementById("build-btn");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const autoBtn = document.getElementById("auto-btn");
+    const cellsRoot = document.getElementById("cells");
+    const leftMarker = document.getElementById("left-marker");
+    const midMarker = document.getElementById("mid-marker");
+    const rightMarker = document.getElementById("right-marker");
+    const statusBox = document.getElementById("status-box");
+    const summaryBox = document.getElementById("summary-box");
+    const stepNote = document.getElementById("step-note");
+    const treeSvg = document.getElementById("tree-svg");
+    const codeLines = [...document.querySelectorAll(".code-line")];
+
+    let state = null;
+    let autoTimer = null;
+
+    function parseArray(text) {
+      const values = text
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => Number(item));
+
+      if (!values.length || values.some((value) => !Number.isFinite(value))) {
+        throw new Error("数组格式不对，请用逗号分隔整数。");
+      }
+
+      const sorted = [...values].sort((a, b) => a - b);
+      if (sorted.some((value, index) => value !== values[index])) {
+        throw new Error("二分查找要求数组已经按从小到大排好序。");
+      }
+
+      return values;
+    }
+
+    function buildTrace(arr, target) {
+      const trace = [];
+      let nextId = 0;
+
+      function walk(left, right, depth, parentId) {
+        const step = {
+          id: nextId++,
+          parentId,
+          depth,
+          left,
+          right,
+          mid: null,
+          midValue: null,
+          outcome: "miss",
+          nextRange: null,
+          lines: [],
+          note: "",
+        };
+
+        if (left > right) {
+          step.lines = [2, 3];
+          step.note = `left = ${left} 已经大于 right = ${right}，递归结束，返回 -1。`;
+          trace.push(step);
+          return step;
+        }
+
+        const mid = Math.floor((left + right) / 2);
+        const midValue = arr[mid];
+        step.mid = mid;
+        step.midValue = midValue;
+        step.lines = [4];
+
+        if (midValue === target) {
+          step.outcome = "found";
+          step.lines = [4, 5, 6];
+          step.note = `arr[${mid}] = ${midValue}，刚好等于 target，直接返回索引 ${mid}。`;
+          trace.push(step);
+          return step;
+        }
+
+        if (midValue < target) {
+          step.outcome = "right";
+          step.nextRange = [mid + 1, right];
+          step.lines = [4, 5, 7, 8];
+          step.note = `arr[${mid}] = ${midValue} 小于 target = ${target}，只保留右半边。`;
+          trace.push(step);
+          walk(mid + 1, right, depth + 1, step.id);
+          return step;
+        }
+
+        step.outcome = "left";
+        step.nextRange = [left, mid - 1];
+        step.lines = [4, 5, 7, 9];
+        step.note = `arr[${mid}] = ${midValue} 大于 target = ${target}，只保留左半边。`;
+        trace.push(step);
+        walk(left, mid - 1, depth + 1, step.id);
+        return step;
+      }
+
+      walk(0, arr.length - 1, 0, null);
+      return trace;
+    }
+
+    function clearCodeHighlight() {
+      codeLines.forEach((line) => line.classList.remove("active"));
+    }
+
+    function highlightLines(lines) {
+      clearCodeHighlight();
+      lines.forEach((lineNo) => {
+        const line = document.querySelector(`.code-line[data-line="${lineNo}"]`);
+        if (line) {
+          line.classList.add("active");
+        }
+      });
+    }
+
+    function renderCells(arr, step) {
+      cellsRoot.innerHTML = "";
+      arr.forEach((value, index) => {
+        const wrap = document.createElement("div");
+        wrap.className = "cell-wrap";
+
+        const indexEl = document.createElement("div");
+        indexEl.className = "index";
+        indexEl.textContent = index;
+
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = value;
+
+        if (step.left !== null && step.right !== null) {
+          if (index < step.left || index > step.right) {
+            cell.classList.add("outside");
+          } else {
+            cell.classList.add("in-range");
+          }
+        }
+
+        if (step.mid === index) {
+          cell.classList.add("mid");
+        }
+
+        if (step.outcome === "found" && step.mid === index) {
+          cell.classList.remove("mid");
+          cell.classList.add("target");
+        }
+
+        wrap.appendChild(indexEl);
+        wrap.appendChild(cell);
+        cellsRoot.appendChild(wrap);
+      });
+    }
+
+    function renderTree(trace, currentStep) {
+      treeSvg.innerHTML = "";
+      const visible = trace.slice(0, currentStep + 1);
+      const nodeMap = new Map(visible.map((step) => [step.id, step]));
+
+      visible.forEach((step) => {
+        if (step.parentId === null || !nodeMap.has(step.parentId)) {
+          return;
+        }
+        const parent = nodeMap.get(step.parentId);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", "200");
+        line.setAttribute("y1", String(86 + parent.depth * 118));
+        line.setAttribute("x2", "200");
+        line.setAttribute("y2", String(124 + step.depth * 118 - 40));
+        line.setAttribute("class", "tree-edge");
+        treeSvg.appendChild(line);
+      });
+
+      visible.forEach((step, index) => {
+        const y = 64 + step.depth * 118;
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", "74");
+        rect.setAttribute("y", String(y));
+        rect.setAttribute("width", "252");
+        rect.setAttribute("height", "62");
+        rect.setAttribute("rx", "18");
+
+        let klass = "tree-node";
+        if (index === currentStep) {
+          klass += " current";
+        } else if (step.outcome === "found") {
+          klass += " done";
+        } else if (step.outcome === "miss") {
+          klass += " miss";
+        }
+        rect.setAttribute("class", klass);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", "200");
+        text.setAttribute("y", String(y + 25));
+        text.setAttribute("class", "tree-text");
+        text.textContent = `bs(${step.left}, ${step.right})`;
+
+        const note = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        note.setAttribute("x", "200");
+        note.setAttribute("y", String(y + 46));
+        note.setAttribute("class", "tree-note");
+
+        if (step.mid === null) {
+          note.textContent = "base case -> return -1";
+        } else if (step.outcome === "found") {
+          note.textContent = `mid=${step.mid}, found`;
+        } else {
+          note.textContent = `mid=${step.mid}, go ${step.outcome === "right" ? "right" : "left"}`;
+        }
+
+        treeSvg.appendChild(rect);
+        treeSvg.appendChild(text);
+        treeSvg.appendChild(note);
+      });
+    }
+
+    function render() {
+      if (!state) {
+        return;
+      }
+
+      const step = state.trace[state.step];
+      highlightLines(step.lines);
+      renderCells(state.arr, step);
+      renderTree(state.trace, state.step);
+
+      leftMarker.textContent = step.left;
+      midMarker.textContent = step.mid === null ? "-" : `${step.mid} (值 ${step.midValue})`;
+      rightMarker.textContent = step.right;
+      statusBox.innerHTML = `<strong>当前调用：</strong> bs(${step.left}, ${step.right})<br>${step.note}`;
+      stepNote.textContent = `第 ${state.step + 1} 次递归调用 / 共 ${state.trace.length} 次`;
+
+      if (step.outcome === "found") {
+        summaryBox.innerHTML = `<strong>结果：</strong>找到 target = ${state.target}，索引是 ${step.mid}。递归深度是 ${step.depth + 1} 层。`;
+      } else if (step.outcome === "miss") {
+        summaryBox.innerHTML = `<strong>结果：</strong>搜索区间已经空了，没有找到 target = ${state.target}。`;
+      } else {
+        const [nextLeft, nextRight] = step.nextRange;
+        const size = step.right - step.left + 1;
+        const nextSize = nextRight - nextLeft + 1;
+        summaryBox.innerHTML = `<strong>区间缩小：</strong>当前大小 ${size}，下一次递归只保留 ${nextSize} 个元素，所以层数增长很慢。`;
+      }
+
+      prevBtn.disabled = state.step === 0;
+      nextBtn.disabled = state.step === state.trace.length - 1;
+      autoBtn.classList.toggle("active", Boolean(autoTimer));
+      autoBtn.textContent = autoTimer ? "停止播放" : "自动播放";
+    }
+
+    function stopAuto() {
+      if (autoTimer) {
+        window.clearInterval(autoTimer);
+        autoTimer = null;
+      }
+    }
+
+    function rebuild() {
+      stopAuto();
+      try {
+        const arr = parseArray(arrayInput.value);
+        const target = Number(targetInput.value);
+        if (!Number.isFinite(target)) {
+          throw new Error("target 需要是数字。");
+        }
+
+        state = {
+          arr,
+          target,
+          trace: buildTrace(arr, target),
+          step: 0,
+        };
+        render();
+      } catch (error) {
+        clearCodeHighlight();
+        cellsRoot.innerHTML = "";
+        treeSvg.innerHTML = "";
+        statusBox.textContent = error.message;
+        summaryBox.textContent = "请修正输入后重新生成。";
+        stepNote.textContent = "输入有误";
+        leftMarker.textContent = "-";
+        midMarker.textContent = "-";
+        rightMarker.textContent = "-";
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        autoBtn.classList.remove("active");
+        autoBtn.textContent = "自动播放";
+      }
+    }
+
+    function stepNext() {
+      if (!state) {
+        return;
+      }
+      if (state.step < state.trace.length - 1) {
+        state.step += 1;
+        render();
+        return;
+      }
+      stopAuto();
+      render();
+    }
+
+    function stepPrev() {
+      if (!state) {
+        return;
+      }
+      if (state.step > 0) {
+        state.step -= 1;
+        render();
+      }
+    }
+
+    function toggleAuto() {
+      if (!state) {
+        return;
+      }
+      if (autoTimer) {
+        stopAuto();
+        render();
+        return;
+      }
+      autoTimer = window.setInterval(() => {
+        if (!state || state.step >= state.trace.length - 1) {
+          stopAuto();
+          render();
+          return;
+        }
+        state.step += 1;
+        render();
+      }, 1400);
+      render();
+    }
+
+    buildBtn.addEventListener("click", rebuild);
+    prevBtn.addEventListener("click", stepPrev);
+    nextBtn.addEventListener("click", stepNext);
+    autoBtn.addEventListener("click", toggleAuto);
+    arrayInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        rebuild();
+      }
+    });
+    targetInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        rebuild();
+      }
+    });
+
+    rebuild();
+  </script>
+</body>
+</html>

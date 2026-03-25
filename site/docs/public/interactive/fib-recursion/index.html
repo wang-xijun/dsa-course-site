@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fib Recursion Tree</title>
+  <style>
+    :root {
+      --bg: #071121;
+      --bg-soft: #0c1830;
+      --panel: rgba(10, 20, 40, 0.88);
+      --panel-strong: rgba(15, 29, 57, 0.96);
+      --line: rgba(160, 176, 220, 0.18);
+      --text: #ecf1ff;
+      --muted: #a8b4d4;
+      --accent: #f3d78a;
+      --blue: #8ab5ff;
+      --green: #88deb0;
+      --red: #f6a4a0;
+      --shadow: 0 22px 48px rgba(2, 8, 24, 0.42);
+      --radius: 22px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+      --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(96, 126, 214, 0.18), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(54, 175, 132, 0.12), transparent 28%),
+        linear-gradient(180deg, #060d1a 0%, #071121 58%, #091529 100%);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 16px;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(7, 17, 33, 0.94), rgba(7, 17, 33, 0.86));
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 14px;
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+
+    .title {
+      margin-right: auto;
+      min-width: 260px;
+    }
+
+    .title h1 {
+      margin: 0 0 4px;
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .field,
+    .buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    label,
+    button,
+    input,
+    p,
+    span,
+    h1,
+    h2,
+    div {
+      letter-spacing: 0;
+      font-kerning: normal;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    input {
+      width: 72px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 15px;
+      font-family: var(--mono);
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(243, 215, 138, 0.40);
+      box-shadow: 0 0 0 3px rgba(243, 215, 138, 0.18);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 13px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(243, 215, 138, 0.24), rgba(183, 129, 32, 0.18));
+      border-color: rgba(243, 215, 138, 0.34);
+      color: #fff1ca;
+    }
+
+    button.active {
+      background: rgba(138, 181, 255, 0.18);
+      border-color: rgba(138, 181, 255, 0.40);
+      color: #dce8ff;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 14px;
+      min-height: 760px;
+    }
+
+    .panel {
+      min-width: 0;
+      border-radius: var(--radius);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .code-wrap {
+      padding: 16px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid rgba(138, 181, 255, 0.18);
+      color: #edf1ff;
+      font-family: var(--mono);
+      font-size: 23px;
+      line-height: 1.65;
+      overflow: auto;
+    }
+
+    .line-no {
+      display: inline-block;
+      width: 28px;
+      margin-right: 16px;
+      color: #6f7ea7;
+      user-select: none;
+    }
+
+    .kw {
+      color: #8ab5ff;
+    }
+
+    .fn {
+      color: #f6d48b;
+    }
+
+    .num {
+      color: #87ddb0;
+    }
+
+    .hl {
+      display: inline-block;
+      width: calc(100% - 12px);
+      margin-left: -6px;
+      padding: 0 6px;
+      border-radius: 10px;
+      background: rgba(243, 215, 138, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(243, 215, 138, 0.16);
+    }
+
+    .legend {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+    }
+
+    .tree-wrap {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 100%;
+    }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .repeat-strip {
+      min-height: 44px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .repeat-strip strong {
+      color: #ffd7d4;
+    }
+
+    .svg-box {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(14, 25, 48, 0.92), rgba(11, 20, 39, 0.98));
+      border: 1px solid rgba(138, 181, 255, 0.12);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 600px;
+    }
+
+    .node-box {
+      fill: rgba(43, 61, 103, 0.96);
+      stroke: rgba(212, 223, 255, 0.32);
+      stroke-width: 1.5;
+    }
+
+    .node-leaf {
+      fill: rgba(34, 93, 65, 0.96);
+      stroke: rgba(136, 222, 176, 0.65);
+    }
+
+    .node-repeat {
+      fill: rgba(108, 55, 55, 0.96);
+      stroke: rgba(246, 164, 160, 0.66);
+    }
+
+    .node-current {
+      fill: rgba(132, 95, 24, 0.96);
+      stroke: rgba(243, 215, 138, 0.95);
+      stroke-width: 2.3;
+      filter: drop-shadow(0 0 18px rgba(243, 215, 138, 0.20));
+    }
+
+    .node-label {
+      fill: #eef3ff;
+      font-size: 20px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-family: var(--mono);
+    }
+
+    .edge {
+      stroke: rgba(162, 178, 219, 0.55);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    .depth-tag {
+      fill: #9eaad0;
+      font-size: 13px;
+      font-family: var(--sans);
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+
+      svg {
+        min-height: 520px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>斐波那契递归调用树</h1>
+        <p>只保留输入、代码和递归树，课堂上可以逐层展开来讲“重复子问题”。</p>
+      </div>
+      <div class="field">
+        <label for="n-input">fib(n)</label>
+        <input id="n-input" type="number" min="0" max="8" step="1" value="5">
+      </div>
+      <div class="buttons">
+        <button id="build-btn" class="primary">生成树</button>
+        <button id="prev-btn">上一步</button>
+        <button id="next-btn">下一步</button>
+        <button id="auto-btn">自动播放</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Python 代码</h2>
+          <div class="panel-note">递归关系很短，但调用树会迅速变大</div>
+        </div>
+        <div class="code-wrap">
+          <pre><span class="line-no">1</span><span><span class="kw">def</span> <span class="fn">fib</span>(n):</span>
+<span class="line-no">2</span><span class="hl">    <span class="kw">if</span> n &lt;= <span class="num">1</span>:</span>
+<span class="line-no">3</span><span>        <span class="kw">return</span> n</span>
+<span class="line-no">4</span><span class="hl">    <span class="kw">return</span> fib(n - <span class="num">1</span>) + fib(n - <span class="num">2</span>)</span></pre>
+          <div class="legend">
+            <div class="chip"><span class="dot" style="background:#f3d78a;"></span>当前展开层</div>
+            <div class="chip"><span class="dot" style="background:#88deb0;"></span>递归基 / 叶子节点</div>
+            <div class="chip"><span class="dot" style="background:#f6a4a0;"></span>重复出现的子问题</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>递归调用树</h2>
+          <div class="panel-note" id="step-note">准备展示 fib(5)</div>
+        </div>
+        <div class="tree-wrap">
+          <div class="status">
+            <span>当前层数：<strong id="depth-label">0</strong></span>
+            <span>总层数：<strong id="depth-total">0</strong></span>
+            <span>可见节点：<strong id="visible-count">0</strong></span>
+          </div>
+          <div class="repeat-strip" id="repeat-strip">重复子问题会在这里提示。</div>
+          <div class="svg-box">
+            <svg id="tree-svg" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" aria-label="fib recursion tree"></svg>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById("n-input");
+    const buildBtn = document.getElementById("build-btn");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const autoBtn = document.getElementById("auto-btn");
+    const svg = document.getElementById("tree-svg");
+    const depthLabel = document.getElementById("depth-label");
+    const depthTotal = document.getElementById("depth-total");
+    const visibleCount = document.getElementById("visible-count");
+    const repeatStrip = document.getElementById("repeat-strip");
+    const stepNote = document.getElementById("step-note");
+
+    let state = null;
+    let autoTimer = null;
+
+    function buildFibTree(n) {
+      let nextId = 0;
+
+      function walk(value, depth) {
+        const node = {
+          id: nextId++,
+          n: value,
+          depth,
+          label: `fib(${value})`,
+          children: [],
+        };
+        if (value > 1) {
+          node.children = [walk(value - 1, depth + 1), walk(value - 2, depth + 1)];
+        }
+        return node;
+      }
+
+      return walk(n, 0);
+    }
+
+    function collectNodes(root) {
+      const nodes = [];
+      const edges = [];
+      const stack = [root];
+      while (stack.length) {
+        const node = stack.pop();
+        nodes.push(node);
+        node.children.forEach((child) => {
+          edges.push({ from: node.id, to: child.id });
+          stack.push(child);
+        });
+      }
+      return { nodes, edges };
+    }
+
+    function assignLayout(root) {
+      let leafIndex = 0;
+      let maxDepth = 0;
+
+      function visit(node) {
+        maxDepth = Math.max(maxDepth, node.depth);
+        if (node.children.length === 0) {
+          node._leafX = leafIndex++;
+        } else {
+          node.children.forEach(visit);
+          node._leafX = (node.children[0]._leafX + node.children[node.children.length - 1]._leafX) / 2;
+        }
+      }
+
+      visit(root);
+      const leafCount = Math.max(leafIndex, 1);
+
+      function normalize(node) {
+        const usableWidth = 880;
+        const usableHeight = Math.max(140, maxDepth * 120);
+        node.x = 60 + (leafCount === 1 ? usableWidth / 2 : (node._leafX / (leafCount - 1)) * usableWidth);
+        node.y = 72 + (maxDepth === 0 ? usableHeight / 2 : (node.depth / maxDepth) * usableHeight);
+        node.children.forEach(normalize);
+      }
+
+      normalize(root);
+      return maxDepth;
+    }
+
+    function summarizeRepeats(nodes, visibleDepth) {
+      const counts = new Map();
+      nodes
+        .filter((node) => node.depth <= visibleDepth)
+        .forEach((node) => counts.set(node.n, (counts.get(node.n) || 0) + 1));
+
+      const repeats = [...counts.entries()]
+        .filter(([, count]) => count > 1)
+        .sort((a, b) => b[0] - a[0]);
+
+      if (!repeats.length) {
+        return "当前还没有看到重复子问题。继续展开，重复调用会越来越明显。";
+      }
+
+      return `重复子问题：${repeats.map(([n, count]) => `<strong>fib(${n}) × ${count}</strong>`).join("，")}`;
+    }
+
+    function render() {
+      if (!state) {
+        return;
+      }
+
+      const visibleNodes = state.nodes.filter((node) => node.depth <= state.step);
+      const visibleNodeIds = new Set(visibleNodes.map((node) => node.id));
+      const visibleEdges = state.edges.filter((edge) => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to));
+      const repeatedValues = new Set(
+        [...visibleNodes.reduce((map, node) => {
+          map.set(node.n, (map.get(node.n) || 0) + 1);
+          return map;
+        }, new Map()).entries()]
+          .filter(([, count]) => count > 1)
+          .map(([n]) => n)
+      );
+
+      svg.innerHTML = "";
+
+      for (let depth = 0; depth <= state.maxDepth; depth += 1) {
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", "8");
+        text.setAttribute("y", String(78 + depth * (state.maxDepth === 0 ? 0 : (state.layoutHeight / state.maxDepth))));
+        text.setAttribute("class", "depth-tag");
+        text.textContent = `depth ${depth}`;
+        svg.appendChild(text);
+      }
+
+      visibleEdges.forEach((edge) => {
+        const from = state.nodeMap.get(edge.from);
+        const to = state.nodeMap.get(edge.to);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(from.x));
+        line.setAttribute("y1", String(from.y + 28));
+        line.setAttribute("x2", String(to.x));
+        line.setAttribute("y2", String(to.y - 28));
+        line.setAttribute("class", "edge");
+        svg.appendChild(line);
+      });
+
+      visibleNodes.forEach((node) => {
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", String(node.x - 58));
+        rect.setAttribute("y", String(node.y - 28));
+        rect.setAttribute("width", "116");
+        rect.setAttribute("height", "56");
+        rect.setAttribute("rx", "16");
+        rect.setAttribute("class", "node-box");
+
+        if (node.children.length === 0) {
+          rect.setAttribute("class", "node-box node-leaf");
+        } else if (repeatedValues.has(node.n)) {
+          rect.setAttribute("class", "node-box node-repeat");
+        }
+
+        if (node.depth === state.step) {
+          rect.setAttribute("class", `${rect.getAttribute("class")} node-current`);
+        }
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", String(node.x));
+        text.setAttribute("y", String(node.y + 1));
+        text.setAttribute("class", "node-label");
+        text.textContent = node.label;
+
+        group.appendChild(rect);
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+
+      depthLabel.textContent = String(state.step);
+      depthTotal.textContent = String(state.maxDepth);
+      visibleCount.textContent = String(visibleNodes.length);
+      stepNote.textContent = `正在展示 fib(${state.inputN}) 的第 ${state.step} 层`;
+      repeatStrip.innerHTML = summarizeRepeats(state.nodes, state.step);
+
+      prevBtn.disabled = state.step === 0;
+      nextBtn.disabled = state.step === state.maxDepth;
+      autoBtn.classList.toggle("active", Boolean(autoTimer));
+      autoBtn.textContent = autoTimer ? "停止播放" : "自动播放";
+    }
+
+    function rebuild() {
+      const raw = Number.parseInt(input.value, 10);
+      const n = Number.isFinite(raw) ? Math.max(0, Math.min(8, raw)) : 5;
+      input.value = String(n);
+
+      const root = buildFibTree(n);
+      const maxDepth = assignLayout(root);
+      const { nodes, edges } = collectNodes(root);
+
+      state = {
+        inputN: n,
+        root,
+        nodes,
+        edges,
+        nodeMap: new Map(nodes.map((node) => [node.id, node])),
+        maxDepth,
+        step: 0,
+        layoutHeight: Math.max(140, maxDepth * 120),
+      };
+
+      stopAuto();
+      render();
+    }
+
+    function stepNext() {
+      if (!state) {
+        return;
+      }
+      if (state.step < state.maxDepth) {
+        state.step += 1;
+        render();
+        return;
+      }
+      stopAuto();
+    }
+
+    function stepPrev() {
+      if (!state) {
+        return;
+      }
+      if (state.step > 0) {
+        state.step -= 1;
+        render();
+      }
+    }
+
+    function stopAuto() {
+      if (autoTimer) {
+        window.clearInterval(autoTimer);
+        autoTimer = null;
+      }
+      render();
+    }
+
+    function toggleAuto() {
+      if (!state) {
+        return;
+      }
+      if (autoTimer) {
+        stopAuto();
+        return;
+      }
+      autoTimer = window.setInterval(() => {
+        if (!state || state.step >= state.maxDepth) {
+          stopAuto();
+          return;
+        }
+        state.step += 1;
+        render();
+      }, 1200);
+      render();
+    }
+
+    buildBtn.addEventListener("click", rebuild);
+    prevBtn.addEventListener("click", stepPrev);
+    nextBtn.addEventListener("click", stepNext);
+    autoBtn.addEventListener("click", toggleAuto);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        rebuild();
+      }
+    });
+
+    rebuild();
+  </script>
+</body>
+</html>

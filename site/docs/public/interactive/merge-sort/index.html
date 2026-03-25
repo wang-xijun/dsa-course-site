@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge Sort Interactive Demo</title>
+  <style>
+    :root {
+      --bg: #081226;
+      --bg-soft: #0d1830;
+      --panel: rgba(10, 21, 44, 0.88);
+      --panel-strong: rgba(15, 30, 60, 0.96);
+      --line: rgba(165, 180, 252, 0.22);
+      --text: #e8ecff;
+      --muted: #a9b5d6;
+      --accent: #f4d88f;
+      --green: #8ee3b1;
+      --blue: #8db7ff;
+      --rose: #ffb4a2;
+      --orange: #d8a03d;
+      --array-fill: linear-gradient(180deg, rgba(77, 112, 176, 0.95), rgba(50, 78, 136, 0.95));
+      --array-split: linear-gradient(180deg, rgba(172, 130, 39, 0.96), rgba(128, 92, 22, 0.96));
+      --array-merge: linear-gradient(180deg, rgba(61, 137, 95, 0.96), rgba(37, 95, 65, 0.96));
+      --focus: 0 0 0 3px rgba(244, 216, 143, 0.25);
+      --shadow: 0 22px 50px rgba(2, 7, 24, 0.42);
+      --radius: 22px;
+      --mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Consolas", monospace;
+      --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(92, 121, 208, 0.20), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(26, 172, 131, 0.14), transparent 28%),
+        linear-gradient(180deg, #050b19 0%, #081226 55%, #091426 100%);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+
+    body {
+      padding: 20px;
+    }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(8, 18, 38, 0.92), rgba(8, 18, 38, 0.84));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.9fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .hero-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .hero-card {
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -90px -90px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(244, 216, 143, 0.20), transparent 65%);
+      pointer-events: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    p,
+    button,
+    input,
+    label,
+    span,
+    div {
+      letter-spacing: 0;
+      font-kerning: normal;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 36px;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.45;
+      max-width: 760px;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .hero-side {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 16px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .metric-note {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .control-panel {
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: 1.5fr auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .field {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+      flex: 1 1 420px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      font-family: var(--mono);
+    }
+
+    .field input:focus {
+      box-shadow: var(--focus);
+      border-color: rgba(244, 216, 143, 0.45);
+    }
+
+    .button-group,
+    .playback-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 11px 14px;
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, rgba(244, 216, 143, 0.22), rgba(203, 148, 52, 0.18));
+      border-color: rgba(244, 216, 143, 0.34);
+      color: #fff2ce;
+    }
+
+    button.active {
+      background: rgba(141, 183, 255, 0.18);
+      border-color: rgba(141, 183, 255, 0.40);
+      color: #dbe8ff;
+    }
+
+    button:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stepper {
+      padding: 16px 18px 18px;
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .step-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .step-meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #7db2ff, #f4d88f);
+      transition: width 180ms ease;
+    }
+
+    .step-description {
+      margin: 0 0 14px;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.55;
+      min-height: 52px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .explain-panel {
+      padding: 16px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .callout {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel-strong);
+    }
+
+    .callout .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .callout .value {
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .left-stack {
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .code-block {
+      margin: 0;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(4, 10, 24, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .code-line {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      transition: background 120ms ease, box-shadow 120ms ease;
+      white-space: pre;
+    }
+
+    .code-line.active {
+      background: rgba(244, 216, 143, 0.13);
+      box-shadow: inset 0 0 0 1px rgba(244, 216, 143, 0.18);
+    }
+
+    .line-no {
+      color: #6d7b9f;
+      text-align: right;
+      user-select: none;
+    }
+
+    .token-keyword { color: #8db7ff; }
+    .token-name { color: #f0f4ff; }
+    .token-func { color: #ffb4a2; }
+    .token-number { color: #8ee3b1; }
+    .token-comment { color: #8b99bc; }
+    .token-return { color: #f4d88f; }
+
+    .cards {
+      display: grid;
+      gap: 12px;
+    }
+
+    .small-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+    }
+
+    .small-card .heading {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .small-card .body {
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .visual-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .tree-panel {
+      min-height: 720px;
+    }
+
+    .tree-zone {
+      display: grid;
+      gap: 12px;
+    }
+
+    .level {
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .level-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nodes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .node {
+      min-width: 88px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+      opacity: 0.5;
+    }
+
+    .node.visible {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .node.completed {
+      border-color: rgba(142, 227, 177, 0.28);
+      background: rgba(61, 137, 95, 0.12);
+    }
+
+    .node.current {
+      transform: translateY(-2px);
+      border-color: rgba(244, 216, 143, 0.42);
+      box-shadow: 0 0 0 3px rgba(244, 216, 143, 0.16);
+    }
+
+    .node.split-focus {
+      border-color: rgba(216, 160, 61, 0.34);
+      background: rgba(216, 160, 61, 0.14);
+    }
+
+    .node-branch {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .array {
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+
+    .box {
+      min-width: 34px;
+      height: 36px;
+      padding: 0 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #f8fbff;
+      background: var(--array-fill);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .box.split {
+      background: var(--array-split);
+    }
+
+    .box.merge {
+      background: var(--array-merge);
+    }
+
+    .placeholder {
+      color: #667696;
+      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.10);
+    }
+
+    .footer-card {
+      padding: 16px 18px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .summary {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel-strong);
+    }
+
+    .summary .k {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .summary .v {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .summary .t {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .footer-hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1180px) {
+      .hero,
+      .status-row,
+      .main-grid,
+      .control-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .left-stack {
+        position: static;
+      }
+
+      .summary-grid,
+      .hero-side {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 10px;
+      }
+
+      .app {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .summary-grid,
+      .hero-side {
+        grid-template-columns: 1fr;
+      }
+
+      .box {
+        min-width: 30px;
+        height: 32px;
+        border-radius: 10px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel control-panel">
+      <div class="input-group">
+        <div class="field">
+          <label for="array-input">输入数组</label>
+          <input id="array-input" type="text" value="8, 3, 5, 1, 7, 4, 6, 2" aria-label="输入数组">
+        </div>
+        <div class="button-group">
+          <button type="button" class="preset-button active" data-array="8,3,5,1,7,4,6,2">8 元素</button>
+          <button type="button" class="preset-button" data-array="9,2,7,4,1,8">6 元素</button>
+          <button type="button" class="preset-button" data-array="12,5,3,9,1">5 元素</button>
+          <button type="button" id="randomize-button">随机一组</button>
+          <button type="button" class="primary" id="load-button">重新生成步骤</button>
+        </div>
+      </div>
+      <div class="playback-group">
+        <button type="button" id="reset-button">回到开头</button>
+        <button type="button" id="prev-button">上一步</button>
+        <button type="button" class="primary" id="play-button">自动播放</button>
+        <button type="button" id="next-button">下一步</button>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Python 代码</h2>
+          <div class="panel-note">当前相关代码行会高亮</div>
+        </div>
+        <pre class="code-block" id="code-block"></pre>
+      </section>
+
+      <section class="panel tree-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">递归拆分树</h2>
+            <div class="panel-note" id="step-meta">请先点击下一步或自动播放</div>
+          </div>
+          <div class="step-title" id="step-title">准备开始</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="tree-zone" id="tree-zone"></div>
+      </section>
+    </section>
+  </div>
+
+  <script>
+    const CODE_LINES = [
+      'def merge_sort(arr):',
+      '    if len(arr) <= 1:',
+      '        return arr',
+      '',
+      '    mid = len(arr) // 2',
+      '    left = merge_sort(arr[:mid])',
+      '    right = merge_sort(arr[mid:])',
+      '',
+      '    return merge(left, right)',
+    ];
+
+    const appState = {
+      rawArray: [8, 3, 5, 1, 7, 4, 6, 2],
+      nodes: [],
+      levels: [],
+      steps: [],
+      timer: null,
+      currentStepIndex: 0,
+      maxDepth: 0,
+    };
+
+    const refs = {
+      arrayInput: document.getElementById('array-input'),
+      codeBlock: document.getElementById('code-block'),
+      treeZone: document.getElementById('tree-zone'),
+      progressFill: document.getElementById('progress-fill'),
+      stepTitle: document.getElementById('step-title'),
+      stepMeta: document.getElementById('step-meta'),
+      loadButton: document.getElementById('load-button'),
+      randomizeButton: document.getElementById('randomize-button'),
+      resetButton: document.getElementById('reset-button'),
+      prevButton: document.getElementById('prev-button'),
+      playButton: document.getElementById('play-button'),
+      nextButton: document.getElementById('next-button'),
+      presetButtons: Array.from(document.querySelectorAll('.preset-button')),
+    };
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    function parseArrayInput(value) {
+      const numbers = value
+        .split(/[,\s]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => Number(item));
+
+      const isValid = numbers.length >= 2 &&
+        numbers.length <= 8 &&
+        numbers.every((num) => Number.isInteger(num) && Math.abs(num) <= 99);
+
+      return isValid ? numbers : null;
+    }
+
+    function mergeSorted(left, right) {
+      const result = [];
+      let i = 0;
+      let j = 0;
+
+      while (i < left.length && j < right.length) {
+        if (left[i] <= right[j]) {
+          result.push(left[i]);
+          i += 1;
+        } else {
+          result.push(right[j]);
+          j += 1;
+        }
+      }
+
+      while (i < left.length) {
+        result.push(left[i]);
+        i += 1;
+      }
+
+      while (j < right.length) {
+        result.push(right[j]);
+        j += 1;
+      }
+
+      return result;
+    }
+
+    function buildMergeTree(arr) {
+      const nodes = [];
+      const stepStates = [];
+
+      function makeSnapshot(currentNodeId, phase, highlightLines, title, meta) {
+        const visibleNodeIds = nodes.filter((node) => node.seen).map((node) => node.id);
+        const completedNodeIds = nodes.filter((node) => node.completed).map((node) => node.id);
+        const splitFocusIds = phase === 'split' ? [currentNodeId] : [];
+
+        stepStates.push({
+          currentNodeId,
+          phase,
+          highlightLines,
+          title,
+          meta,
+          visibleNodeIds,
+          completedNodeIds,
+          splitFocusIds,
+        });
+      }
+
+      function visit(subArr, level, path) {
+        const node = {
+          id: path || 'root',
+          path: path || 'root',
+          label: path ? path.toUpperCase() : 'ROOT',
+          level,
+          input: subArr.slice(),
+          output: null,
+          leftId: null,
+          rightId: null,
+          seen: false,
+          completed: false,
+        };
+        nodes.push(node);
+
+        node.seen = true;
+
+        if (subArr.length <= 1) {
+          node.completed = true;
+          node.output = subArr.slice();
+          makeSnapshot(
+            node.id,
+            'base case',
+            [2, 3],
+            `到达叶子节点：${formatArray(subArr)}`,
+            `level ${level} · size ${subArr.length}`,
+          );
+          return subArr.slice();
+        }
+
+        const mid = Math.floor(subArr.length / 2);
+        const leftInput = subArr.slice(0, mid);
+        const rightInput = subArr.slice(mid);
+
+        makeSnapshot(
+          node.id,
+          'split',
+          [1, 5, 6, 7],
+          `拆分节点：${formatArray(subArr)}`,
+          `level ${level} · size ${subArr.length}`,
+        );
+
+        const leftPath = path ? `${path}L` : 'L';
+        const rightPath = path ? `${path}R` : 'R';
+        node.leftId = leftPath;
+        node.rightId = rightPath;
+
+        const leftSorted = visit(leftInput, level + 1, leftPath);
+        const rightSorted = visit(rightInput, level + 1, rightPath);
+
+        node.completed = true;
+        node.output = mergeSorted(leftSorted, rightSorted);
+
+        makeSnapshot(
+          node.id,
+          'merge',
+          [9],
+          `合并返回：${formatArray(node.output)}`,
+          `level ${level} · merge ${leftSorted.length}+${rightSorted.length}`,
+        );
+
+        return node.output.slice();
+      }
+
+      visit(arr, 0, '');
+
+      const levelsMap = new Map();
+      nodes.forEach((node) => {
+        if (!levelsMap.has(node.level)) {
+          levelsMap.set(node.level, []);
+        }
+        levelsMap.get(node.level).push(node);
+      });
+
+      const levels = Array.from(levelsMap.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([level, levelNodes]) => ({
+          level,
+          nodes: levelNodes.sort((a, b) => a.id.localeCompare(b.id)),
+        }));
+
+      return {
+        nodes,
+        levels,
+        steps: stepStates,
+        maxDepth: levels.length - 1,
+      };
+    }
+
+    function formatArray(arr) {
+      return `[${arr.join(', ')}]`;
+    }
+
+    function displayNodeName(nodeId) {
+      return nodeId === 'root' ? 'ROOT' : nodeId;
+    }
+
+    function renderCode(activeLines) {
+      const activeSet = new Set(activeLines);
+      refs.codeBlock.innerHTML = CODE_LINES.map((line, index) => {
+        const lineNo = index + 1;
+        const highlighted = activeSet.has(lineNo) ? ' active' : '';
+        return `<div class="code-line${highlighted}"><span class="line-no">${lineNo}</span><span>${syntaxHighlight(line)}</span></div>`;
+      }).join('');
+    }
+
+    function syntaxHighlight(line) {
+      return escapeHtml(line)
+        .replace(/\bdef\b/g, '<span class="token-keyword">def</span>')
+        .replace(/\bif\b/g, '<span class="token-keyword">if</span>')
+        .replace(/\breturn\b/g, '<span class="token-return">return</span>')
+        .replace(/\blen\b/g, '<span class="token-func">len</span>')
+        .replace(/\bmerge_sort\b/g, '<span class="token-func">merge_sort</span>')
+        .replace(/\bmerge\b/g, '<span class="token-func">merge</span>')
+        .replace(/\bmid\b/g, '<span class="token-name">mid</span>')
+        .replace(/\bleft\b/g, '<span class="token-name">left</span>')
+        .replace(/\bright\b/g, '<span class="token-name">right</span>')
+        .replace(/\barr\b/g, '<span class="token-name">arr</span>')
+        .replace(/\b1\b/g, '<span class="token-number">1</span>');
+    }
+
+    function arrayHtml(arr, mode) {
+      return `<div class="array">${arr.map((value) => `<span class="box ${mode}">${value}</span>`).join('')}</div>`;
+    }
+
+    function renderTree(step) {
+      refs.treeZone.innerHTML = appState.levels.map((levelInfo) => {
+        const levelWork = levelInfo.nodes.reduce((sum, node) => sum + node.input.length, 0);
+        const nodesHtml = levelInfo.nodes.map((node) => {
+          const isVisible = step.visibleNodeIds.includes(node.id);
+          const isCompleted = step.completedNodeIds.includes(node.id);
+          const isCurrent = step.currentNodeId === node.id;
+          const isSplitFocus = step.splitFocusIds.includes(node.id);
+
+          let classes = 'node';
+          if (isVisible) classes += ' visible';
+          if (isCompleted) classes += ' completed';
+          if (isCurrent) classes += ' current';
+          if (isSplitFocus) classes += ' split-focus';
+
+          let content = '<div class="placeholder">等待递归到达</div>';
+          if (isVisible && !isCompleted) {
+            content = arrayHtml(node.input, 'split');
+          }
+          if (isCompleted) {
+            content = arrayHtml(node.output, 'merge');
+          }
+
+          return `
+            <div class="${classes}">
+              <div class="node-branch">${node.label}</div>
+              ${content}
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="level">
+            <div class="level-header">
+              <span>level ${levelInfo.level}</span>
+              <span>本层元素总数 = ${levelWork}</span>
+            </div>
+            <div class="nodes">${nodesHtml}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderStep() {
+      const step = appState.steps[appState.currentStepIndex];
+      const progressRatio = (appState.currentStepIndex + 1) / appState.steps.length;
+
+      refs.stepTitle.textContent = `${step.phase} · ${displayNodeName(step.currentNodeId)}`;
+      refs.stepMeta.textContent = `${step.title} · ${step.meta}`;
+      refs.progressFill.style.width = `${Math.round(progressRatio * 100)}%`;
+
+      renderCode(step.highlightLines);
+      renderTree(step);
+
+      refs.prevButton.disabled = appState.currentStepIndex === 0;
+      refs.nextButton.disabled = appState.currentStepIndex >= appState.steps.length - 1;
+      refs.resetButton.disabled = appState.currentStepIndex === 0;
+    }
+
+    function stopPlayback() {
+      if (appState.timer) {
+        window.clearInterval(appState.timer);
+        appState.timer = null;
+      }
+      refs.playButton.textContent = '自动播放';
+      refs.playButton.classList.remove('active');
+    }
+
+    function nextStep() {
+      if (appState.currentStepIndex >= appState.steps.length - 1) {
+        stopPlayback();
+        return;
+      }
+      appState.currentStepIndex += 1;
+      renderStep();
+    }
+
+    function prevStep() {
+      stopPlayback();
+      if (appState.currentStepIndex <= 0) {
+        return;
+      }
+      appState.currentStepIndex -= 1;
+      renderStep();
+    }
+
+    function resetSteps() {
+      stopPlayback();
+      appState.currentStepIndex = 0;
+      renderStep();
+    }
+
+    function loadArray(arr) {
+      stopPlayback();
+      appState.rawArray = arr.slice();
+      const built = buildMergeTree(appState.rawArray);
+      appState.nodes = built.nodes;
+      appState.levels = built.levels;
+      appState.steps = built.steps;
+      appState.maxDepth = built.maxDepth;
+      appState.currentStepIndex = 0;
+      refs.arrayInput.value = arr.join(', ');
+      renderStep();
+    }
+
+    function randomArray() {
+      const length = 6 + Math.floor(Math.random() * 3);
+      const values = [];
+      while (values.length < length) {
+        const value = 1 + Math.floor(Math.random() * 15);
+        if (!values.includes(value)) {
+          values.push(value);
+        }
+      }
+      refs.arrayInput.value = values.join(', ');
+      refs.presetButtons.forEach((button) => button.classList.remove('active'));
+      loadArray(values);
+    }
+
+    refs.loadButton.addEventListener('click', () => {
+      const arr = parseArrayInput(refs.arrayInput.value);
+      if (!arr) {
+        window.alert('请输入 2 到 8 个整数，用逗号或空格分隔，且每个整数绝对值不超过 99。');
+        return;
+      }
+      refs.presetButtons.forEach((button) => {
+        button.classList.toggle('active', button.dataset.array === arr.join(','));
+      });
+      loadArray(arr);
+    });
+
+    refs.randomizeButton.addEventListener('click', randomArray);
+    refs.prevButton.addEventListener('click', prevStep);
+    refs.nextButton.addEventListener('click', () => {
+      stopPlayback();
+      nextStep();
+    });
+    refs.resetButton.addEventListener('click', resetSteps);
+    refs.playButton.addEventListener('click', () => {
+      if (appState.timer) {
+        stopPlayback();
+        return;
+      }
+      refs.playButton.textContent = '暂停播放';
+      refs.playButton.classList.add('active');
+      appState.timer = window.setInterval(() => {
+        if (appState.currentStepIndex >= appState.steps.length - 1) {
+          stopPlayback();
+          return;
+        }
+        nextStep();
+      }, 1800);
+    });
+
+    refs.presetButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        refs.presetButtons.forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        const arr = button.dataset.array.split(',').map((value) => Number(value));
+        loadArray(arr);
+      });
+    });
+
+    renderCode([1, 5, 6, 7]);
+    loadArray(appState.rawArray);
+  </script>
+</body>
+</html>
