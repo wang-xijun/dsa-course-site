@@ -12,11 +12,11 @@
 
 ## 当前演示
 
-- [二分查找递归](/interactive/binary-search-recursion/index.html)
-- [归并排序](/interactive/merge-sort/index.html)
-- [循环队列](/interactive/circular-queue/index.html)
-- [括号匹配](/interactive/parentheses-match/index.html)
-- [斐波那契递归](/interactive/fib-recursion/index.html)
+- [二分查找递归](./binary-search-recursion/index.html)
+- [归并排序](./merge-sort/index.html)
+- [循环队列](./circular-queue/index.html)
+- [括号匹配](./parentheses-match/index.html)
+- [斐波那契递归](./fib-recursion/index.html)
 
 ## 嵌入示例
 
