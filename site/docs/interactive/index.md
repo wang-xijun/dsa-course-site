@@ -14,13 +14,35 @@
 
 下面这些入口会直接在新标签页中打开对应的交互式 HTML 页面。
 
-<ul>
-  <li><a href="./binary-search-recursion/index.html" target="_blank" rel="noreferrer">二分查找递归</a></li>
-  <li><a href="./merge-sort/index.html" target="_blank" rel="noreferrer">归并排序</a></li>
-  <li><a href="./circular-queue/index.html" target="_blank" rel="noreferrer">循环队列</a></li>
-  <li><a href="./parentheses-match/index.html" target="_blank" rel="noreferrer">括号匹配</a></li>
-  <li><a href="./fib-recursion/index.html" target="_blank" rel="noreferrer">斐波那契递归</a></li>
-</ul>
+<DemoLinkCard
+  href="/interactive/binary-search-recursion/index.html"
+  title="二分查找递归"
+  description="观察递归缩小区间的过程，理解有序数组上的查找逻辑。"
+/>
+
+<DemoLinkCard
+  href="/interactive/merge-sort/index.html"
+  title="归并排序"
+  description="查看分治拆分与合并的动态过程，理解 O(n log n) 的来源。"
+/>
+
+<DemoLinkCard
+  href="/interactive/circular-queue/index.html"
+  title="循环队列"
+  description="配合队头、队尾和模运算，理解顺序存储下的循环复用。"
+/>
+
+<DemoLinkCard
+  href="/interactive/parentheses-match/index.html"
+  title="括号匹配"
+  description="通过入栈与出栈过程，直观看到栈如何处理配对问题。"
+/>
+
+<DemoLinkCard
+  href="/interactive/fib-recursion/index.html"
+  title="斐波那契递归"
+  description="观察递归展开树，感受重复计算与指数级增长。"
+/>
 
 ## 嵌入示例
 

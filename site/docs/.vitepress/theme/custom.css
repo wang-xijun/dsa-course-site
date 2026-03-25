@@ -11,6 +11,54 @@
   --vp-home-hero-image-filter: blur(52px);
 }
 
+.demo-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 0;
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 1));
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.demo-link-card__content strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.demo-link-card__content p {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+}
+
+.demo-link-card__action {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--vp-c-brand-1);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.demo-link-card__action:hover {
+  background: var(--vp-c-brand-2);
+}
+
+@media (max-width: 640px) {
+  .demo-link-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .interactive-frame {
   margin: 20px 0 28px;
   border: 1px solid rgba(15, 23, 42, 0.12);
