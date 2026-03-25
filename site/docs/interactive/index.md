@@ -4,6 +4,12 @@
 
 这些页面既可以独立访问，也可以在教材章节中通过 `iframe` 嵌入。
 
+## 先说明一个容易混淆的点
+
+如果你在 GitHub 仓库文件列表里直接点开某个 `index.html`，GitHub 展示的通常只是源码文本。
+
+要真正运行这些交互页面，请通过当前站点里的链接打开。
+
 ## 当前演示
 
 - [二分查找递归](/interactive/binary-search-recursion/index.html)
