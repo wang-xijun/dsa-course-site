@@ -12,12 +12,14 @@
 
 ## 当前演示
 
+下面这些入口会直接在新标签页中打开对应的交互式 HTML 页面。
+
 <ul>
-  <li><a href="./binary-search-recursion/index.html">二分查找递归</a></li>
-  <li><a href="./merge-sort/index.html">归并排序</a></li>
-  <li><a href="./circular-queue/index.html">循环队列</a></li>
-  <li><a href="./parentheses-match/index.html">括号匹配</a></li>
-  <li><a href="./fib-recursion/index.html">斐波那契递归</a></li>
+  <li><a href="./binary-search-recursion/index.html" target="_blank" rel="noreferrer">二分查找递归</a></li>
+  <li><a href="./merge-sort/index.html" target="_blank" rel="noreferrer">归并排序</a></li>
+  <li><a href="./circular-queue/index.html" target="_blank" rel="noreferrer">循环队列</a></li>
+  <li><a href="./parentheses-match/index.html" target="_blank" rel="noreferrer">括号匹配</a></li>
+  <li><a href="./fib-recursion/index.html" target="_blank" rel="noreferrer">斐波那契递归</a></li>
 </ul>
 
 ## 嵌入示例
